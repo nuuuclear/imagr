@@ -18,5 +18,3 @@ ninja
 ```
 
 on linux you might need to fix SDL3 in the CMakeLists.txt, as I couldn't get it working...
-
-once built, drag and drop an image onto the executable for it to work.
