@@ -15,13 +15,13 @@ find_package(SDL3_ttf REQUIRED)
 add_library(inicpp OBJECT external/inicpp/ini.cpp)
 target_include_directories(inicpp PUBLIC external/inicpp)
 
-add_library(stbimage OBJECT external/stb_image/stb_image.c)
-target_include_directories(stbimage PUBLIC external/stb_image)
-
 # Plugins
 
 add_subdirectory(pluginSDK)
+
 add_subdirectory(plugins/stb)
+add_subdirectory(plugins/qoi)
+add_subdirectory(plugins/gif)
 
 # imagr executable
 
@@ -42,7 +42,6 @@ target_link_libraries(imagr PRIVATE
     SDL3::SDL3 
     SDL3_ttf::SDL3_ttf 
     inicpp 
-    stbimage
     imagr_plugin_sdk
 )
 

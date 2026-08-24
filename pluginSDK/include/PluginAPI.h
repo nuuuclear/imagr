@@ -22,6 +22,8 @@ struct PluginAPI {
 
     const char* name;
     const char* version;
+    const char* displayName;
+    const char* developerName;
 
     // high priority plugins get used when multiple plugins support the same file extensions
     int priority;

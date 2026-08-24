@@ -142,9 +142,9 @@ void Viewer::draw() {
 
     SDL_SetRenderDrawColor(
         renderer,
-        30, // dark grey
-        30,
-        30,
+        32, // dark grey
+        32,
+        32,
         255
     );
 

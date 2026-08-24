@@ -1,15 +1,13 @@
 #include "PluginAPI.h"
 
+#define QOI_IMPLEMENTATION
+#include "qoi.h"
+
 #include <algorithm>
 #include <cctype>
 #include <string>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-// stb_image plugin, this only supports bitmap, png and jpeg.
-
-class StbDecoder {
+class QoiDecoder {
 public:
     bool supportsExtension(const std::string& extension) {
         std::string ext = extension;
@@ -25,35 +23,33 @@ public:
             }
         );
 
-        return ext == ".png" 
-            || ext == ".jpg" 
-            || ext == ".jpeg" 
-            || ext == ".bmp";
+        return ext == ".qoi";
     }
 
     PluginImageData decodeImage(const std::string& filePath) {
-        PluginImageData data{};
+        PluginImageData result{};
 
-        int channels = 0;
+        qoi_desc desc{};
 
-        data.pixels = stbi_load(
+        void* pixels = qoi_read(
             filePath.c_str(),
-            &data.width,
-            &data.height,
-            &channels,
-            4
+            &desc,
+            4 //rgba
         );
 
-        if (!data.pixels) return {};
+        if (!pixels) return {};
 
-        data.channels = 4;
+        result.pixels = static_cast<uint8_t*>(pixels);
+        result.width = static_cast<int>(desc.width);
+        result.height = static_cast<int>(desc.height);
+        result.channels = 4;
 
-        return data;
+        return result;
     }
 
     void freeImageData(PluginImageData& data) {
         if (data.pixels) {
-            stbi_image_free(data.pixels);
+            qoi_free_pixels(data.pixels);
         }
 
         data = {};
@@ -61,37 +57,43 @@ public:
 };
 
 static PluginDecoder Create() {
-    return new StbDecoder();
+    return new QoiDecoder();
 }
 
 static void Destroy(PluginDecoder decoder) {
-    delete static_cast<StbDecoder*>(decoder);
+    delete static_cast<QoiDecoder*>(decoder);
 }
 
 static bool SupportsExtension(PluginDecoder decoder, const char* extension) {
-    if (!decoder || !extension)return false;
+    if (!decoder || !extension) {
+        return false;
+    }
 
-    return static_cast<StbDecoder*>(decoder)->supportsExtension(extension);
+    return static_cast<QoiDecoder*>(decoder)->supportsExtension(extension);
 }
 
 static PluginImageData DecodeImage(PluginDecoder decoder, const char* filePath) {
-    if (!decoder || !filePath) return {};
+    if (!decoder || !filePath) {
+        return {};
+    }
 
-    return static_cast<StbDecoder*>(decoder)->decodeImage(filePath);
+    return static_cast<QoiDecoder*>(decoder)->decodeImage(filePath);
 }
 
 static void FreeImageData(PluginDecoder decoder, PluginImageData* imageData) {
-    if (!decoder || !imageData) return;
+    if (!decoder || !imageData) {
+        return;
+    }
 
-    static_cast<StbDecoder*>(decoder)->freeImageData(*imageData);
+    static_cast<QoiDecoder*>(decoder)->freeImageData(*imageData);
 }
 
 PLUGIN_EXPORT PluginAPI GetPluginAPI() {
     return PluginAPI{
         PLUGIN_API_VERSION,
-        "stb_image",
+        "qoi",
         "1.0.0",
-        "stb_image general image support",
+        "QOI image support",
         "Internal",
         50,
 

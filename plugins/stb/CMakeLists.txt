@@ -5,6 +5,11 @@ project(imagr_stb_plugin)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_library(stbimage INTERFACE)
+target_include_directories(stbimage INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/stb_image"
+)
+
 add_library(imagr_stb SHARED
     stbDecoder.cpp
 )
