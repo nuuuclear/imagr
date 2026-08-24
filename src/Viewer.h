@@ -1,15 +1,16 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-
 #include <string>
+
+#include "PluginManager.h"
 
 class app;
 class PluginManager;
 
 class Viewer {
 public:
-    Viewer(app* app);
+    explicit Viewer(app* app);
     ~Viewer();
 
     void present(const std::string& imagePath);
@@ -24,7 +25,7 @@ private:
     app* parentApp = nullptr;
     SDL_Texture* texture = nullptr;
 
-    PluginManager* pm = nullptr;
+    PluginManager pm;
 
     SDL_FRect destRect{};
 };

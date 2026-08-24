@@ -20,14 +20,8 @@ target_include_directories(stbimage PUBLIC external/stb_image)
 
 # Plugins
 
-add_library(stbplugin SHARED src/stbPlugin.cpp)
-target_include_directories(stbplugin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(stbplugin PRIVATE stbimage)
-
-set_target_properties(stbplugin PROPERTIES 
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
-)
+add_subdirectory(pluginSDK)
+add_subdirectory(plugins/stb)
 
 # imagr executable
 
@@ -39,14 +33,16 @@ add_executable(imagr
     "src/Viewer.h"
     "src/PluginManager.h"
     "src/PlatformSymbols.h"
-    "src/IImageDecoder.h"
 )
+
 target_link_libraries(imagr PRIVATE 
     SDL3::SDL3 
     SDL3_ttf::SDL3_ttf 
     inicpp 
     stbimage
+    imagr_plugin_sdk
 )
+
 set_target_properties(imagr PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 if(UNIX AND NOT APPLE)

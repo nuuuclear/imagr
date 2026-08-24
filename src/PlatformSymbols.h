@@ -2,47 +2,127 @@
 
 #if defined(_WIN32) || defined(_WIN64)
     #define PLATFORM_WINDOWS
+
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
     #include <windows.h>
+
     using PluginHandle = HMODULE;
-    #define CV_EXPORT extern "C" __declspec(dllexport)
+
 #else
     #define PLATFORM_POSIX
+
     #include <dlfcn.h>
+
     using PluginHandle = void*;
-    #define CV_EXPORT extern "C" __attribute__((visibility("default")))
 #endif
 
-#include <string>
 #include <iostream>
+#include <string>
 
-inline PluginHandle LoadPluginLibrary(const std::wstring& path) {
+inline PluginHandle LoadPluginLibrary(
+    const std::wstring& path
+) {
 #if defined(PLATFORM_WINDOWS)
-    return LoadLibraryW(path.c_str());
-#else
-    // convert wstring back to string for POSIX dlopen
-    std::string sPath(path.begin(), path.end());
-    // RTLD_LAZY binds symbols as they get executed
-    PluginHandle handle = dlopen(sPath.c_str(), RTLD_LAZY);
+    HMODULE handle = LoadLibraryW(path.c_str());
+
     if (!handle) {
-        std::cerr << "[Plugin Error] dlopen failed: " << dlerror() << "\n";
+        DWORD error = GetLastError();
+
+        std::wcerr
+            << L"[Plugin Error] Failed to load plugin: "
+            << path
+            << L" (error "
+            << error
+            << L")\n";
     }
+
     return handle;
-#endif
-}
 
-inline void* getPluginSymbol(PluginHandle handle, const std::string& symbol) {
-#if defined(PLATFORM_WINDOWS)
-    return (void*)GetProcAddress(handle, symbol.c_str());
 #else
-    return dlsym(handle, symbol.c_str());
+    std::string stringPath(
+        path.begin(),
+        path.end()
+    );
+
+    PluginHandle handle =
+        dlopen(
+            stringPath.c_str(),
+            RTLD_LAZY
+        );
+
+    if (!handle) {
+        std::cerr
+            << "[Plugin Error] Failed to load plugin: "
+            << dlerror()
+            << "\n";
+    }
+
+    return handle;
+
 #endif
 }
 
-inline void freePluginLibrary(PluginHandle handle) {
-    if (!handle) return;
+inline void* GetPluginSymbol(PluginHandle handle, const std::string& symbol) {
+    if (!handle)
+        return nullptr;
+
+#if defined(PLATFORM_WINDOWS)
+    FARPROC proc = GetProcAddress(
+        handle,
+        symbol.c_str()
+    );
+
+    if (!proc) {
+        DWORD error = GetLastError();
+
+        std::cerr
+            << "<Plugins> ERROR: Could not find symbol '"
+            << symbol
+            << "' (error "
+            << error
+            << ")\n";
+
+        return nullptr;
+    }
+
+    return reinterpret_cast<void*>(proc);
+#else
+    dlerror();
+
+    void* proc = dlsym(
+        handle,
+        symbol.c_str()
+    );
+
+    const char* error = dlerror();
+
+    if (error) {
+        std::cerr
+            << "<Plugins> ERROR: Could not find symbol '"
+            << symbol
+            << "': "
+            << error
+            << "\n";
+
+        return nullptr;
+    }
+
+    return proc;
+
+#endif
+}
+
+inline void FreePluginLibrary(PluginHandle handle) {
+    if (!handle)
+        return;
+
 #if defined(PLATFORM_WINDOWS)
     FreeLibrary(handle);
+
 #else
     dlclose(handle);
+
 #endif
 }

@@ -21,6 +21,7 @@ bool app::init(appConfig conf) {
         config->windowHeight, 
         SDL_WINDOW_RESIZABLE
     );
+
     if (!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "App failed create window: %s", SDL_GetError());
         return false;

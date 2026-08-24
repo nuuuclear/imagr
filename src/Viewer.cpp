@@ -1,20 +1,12 @@
 #include "Viewer.h"
 
-#ifndef NOMINMAX
-    #define NOMINMAX // I dont even use windows.h, can't find std::min() without this though?
-#endif
 #include <algorithm>
 #include <iostream>
 
 #include "App.h"
-#include "IImageDecoder.h"
-#include "PluginManager.h"
 
 Viewer::Viewer(app* app) : 
-    parentApp(app), 
-    texture(nullptr), 
-    destRect{},
-    pm(new PluginManager())
+    parentApp(app)
 {
 }
 
@@ -27,20 +19,39 @@ Viewer::~Viewer() {
 
 void Viewer::present(const std::string& imagePath) {
     SDL_Renderer* renderer = parentApp->getRenderer();
+
     if (!renderer) {
         std::cerr << "No renderer available.\n";
         return;
     }
 
-    IImageDecoder* decoder = pm->findDecoderForFile(imagePath);
-    if (!decoder) {
-        std::cerr << "No decoder found for: " << imagePath << "\n";
+    // finds the plugin that should handle this file
+    LoadedPlugin* plugin = pm.findDecoderForFile(imagePath);
+
+    if (!plugin) {
+        std::cerr
+            << "No decoder found for: "
+            << imagePath
+            << "\n";
+
         return;
     }
 
-    RawImageData rawData = decoder->decodeImage(imagePath);
-    if (!rawData.pixels || rawData.width <= 0 || rawData.height <= 0) {
-        std::cerr << "Image decoding failed: " << imagePath << "\n";
+    PluginImageData rawData =
+        plugin->api.decodeImage(
+            plugin->decoder,
+            imagePath.c_str()
+        );
+
+    if (   !rawData.pixels 
+        || rawData.width <= 0 
+        || rawData.height <= 0
+    ) {
+        std::cerr
+            << "Image decoding failed: "
+            << imagePath
+            << "\n";
+
         return;
     }
 
@@ -53,42 +64,62 @@ void Viewer::present(const std::string& imagePath) {
     );
 
     if (!surface) {
-        std::cerr << "Failed to create SDL surface: "
-                  << SDL_GetError() << "\n";
+        std::cerr
+            << "Could not create SDL surface: "
+            << SDL_GetError()
+            << "\n";
 
-        decoder->freeImageData(rawData);
+        plugin->api.freeImageData(
+            plugin->decoder,
+            &rawData
+        );
+
         return;
     }
 
-    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(
-        renderer,
-        surface
-    );
+    SDL_Texture* newTexture =
+        SDL_CreateTextureFromSurface(
+            renderer,
+            surface
+        );
 
     SDL_DestroySurface(surface);
 
     if (!newTexture) {
-        std::cerr << "Failed to create SDL texture: "
-                  << SDL_GetError() << "\n";
+        std::cerr
+            << "Could not create SDL texture: "
+            << SDL_GetError()
+            << "\n";
 
-        decoder->freeImageData(rawData);
+        plugin->api.freeImageData(
+            plugin->decoder,
+            &rawData
+        );
+
         return;
     }
 
-    decoder->freeImageData(rawData);
+    plugin->api.freeImageData(
+        plugin->decoder,
+        &rawData
+    );
 
-    // replace the previous texture
     if (texture) {
         SDL_DestroyTexture(texture);
     }
+
     texture = newTexture;
 
-    float imgWidth;
-    float imgHeight;
-    SDL_GetTextureSize(texture, &imgWidth, &imgHeight);
+    float imgWidth = 0.0f;
+    float imgHeight = 0.0f;
+    SDL_GetTextureSize(
+        texture,
+        &imgWidth,
+        &imgHeight
+    );
 
-    int windowWidth;
-    int windowHeight;
+    int windowWidth = 0;
+    int windowHeight = 0;
     SDL_GetWindowSize(
         parentApp->getWindow(),
         &windowWidth,
@@ -96,19 +127,14 @@ void Viewer::present(const std::string& imagePath) {
     );
 
     float scaleX = static_cast<float>(windowWidth) / imgWidth;
-    float scaleY = static_cast<float>(windowHeight) / imgHeight;
+    float scaleY = static_cast<float>(windowHeight) /imgHeight;
     float scale = std::min(scaleX, scaleY);
 
     destRect.w = imgWidth * scale;
     destRect.h = imgHeight * scale;
 
-    destRect.x =
-        (static_cast<float>(windowWidth) - destRect.w) / 2.0f;
-
-    destRect.y =
-        (static_cast<float>(windowHeight) - destRect.h) / 2.0f;
-
-    // std::cout << "<DEBUG> presented " << imagePath << "\n";
+    destRect.x = (static_cast<float>(windowWidth) - destRect.w) / 2.0f;
+    destRect.y = (static_cast<float>(windowHeight) - destRect.h) / 2.0f;
 }
 
 void Viewer::draw() {
@@ -137,5 +163,5 @@ void Viewer::draw() {
 }
 
 void Viewer::loadPlugins(const std::string& dirPath) {
-    pm->loadPluginsFromFolder(dirPath);
+    pm.loadPluginsFromFolder(dirPath);
 }

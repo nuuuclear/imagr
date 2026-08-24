@@ -7,6 +7,7 @@
 #include <iostream>
 #include <any>
 #include <algorithm>
+#include <filesystem>
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
