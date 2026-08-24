@@ -4,6 +4,8 @@
 #include "PluginManager.h"
 #include "Viewer.h"
 
+#include "Paths.h"
+
 #include <string>
 #include <memory>
 
@@ -23,7 +25,9 @@ int main(int argc, const char** argv) {
 
     auto viewer = std::make_unique<Viewer>(&app);
 
-    viewer->loadPlugins("./plugins");
+    auto pluginsPath = app.getFileSystem().resolve(Paths::Plugins);
+    viewer->loadPlugins(pluginsPath.string());
+    
     viewer->present(imagePath);
 
     app.on("fileDrop", [&viewer](const std::string& filePath) {

@@ -12,6 +12,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "FileSystem.h"
+
 struct appConfig {
     std::string title = "title";
 
@@ -36,6 +38,8 @@ public:
     void step();
 
     void reset(appConfig conf);
+
+    FileSystem& getFileSystem();
 
     SDL_Window* getWindow();
     SDL_Renderer* getRenderer();
@@ -80,6 +84,8 @@ private:
     SDL_Renderer* renderer = nullptr;
     SDL_Surface* applicationSurface = nullptr;
     TTF_TextEngine* text_engine = nullptr;
+
+    FileSystem filesys;
 
     double targetFrameTime;
 

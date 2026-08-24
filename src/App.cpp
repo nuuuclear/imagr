@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include "Paths.h"
+
 app::app() {
 }
 
@@ -37,7 +39,31 @@ bool app::init(appConfig conf) {
         return false;
     }
 
-    ui_font = TTF_OpenFont("./resources/monaco.ttf", 16.0f);
+    const char* basePath = SDL_GetBasePath();
+
+    if (!basePath) {
+        throw std::runtime_error(
+            "Could not determine application path"
+        );
+    }
+
+    std::filesystem::path root(basePath);
+    filesys.setRoot(root);
+
+    filesys.set(Paths::Resources,
+        root / "resources"
+    );
+
+    filesys.set(Paths::Plugins,
+        root / "plugins"
+    );
+
+    auto fontPath = getFileSystem().resolve(
+        Paths::Resources,
+        "monaco.ttf"
+    );
+
+    ui_font = TTF_OpenFont(fontPath.string().c_str(), 16.0f);
     if (!ui_font) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Font failed to load: %s", SDL_GetError());
     }
@@ -110,6 +136,10 @@ void app::step() {
     for (const auto& entry: drawCallbacks) {
         entry.callback(); 
     }
+}
+
+FileSystem& app::getFileSystem() {
+    return filesys;
 }
 
 void app::reset(appConfig conf) {

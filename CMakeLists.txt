@@ -33,6 +33,9 @@ add_executable(imagr
     "src/Viewer.h"
     "src/PluginManager.h"
     "src/PlatformSymbols.h"
+    "src/Paths.h"
+    "src/FileSystem.cpp"
+    "src/FileSystem.h"
 )
 
 target_link_libraries(imagr PRIVATE 
