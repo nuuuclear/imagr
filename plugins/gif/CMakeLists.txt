@@ -5,8 +5,6 @@ project(imagr_gif_plugin)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(FetchContent)
-
 add_library(giflib STATIC
     external/giflib/dgif_lib.c
     external/giflib/egif_lib.c
@@ -26,7 +24,15 @@ target_link_libraries(imagr_gif PRIVATE
     giflib
 )
 
+# install
+
 set_target_properties(imagr_gif PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY
-        "${CMAKE_BINARY_DIR}/plugins"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+)
+
+install(TARGETS imagr_gif
+    RUNTIME DESTINATION plugins
+    LIBRARY DESTINATION plugins
+    # ARCHIVE DESTINATION plugins
 )

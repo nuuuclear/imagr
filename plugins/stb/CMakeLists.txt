@@ -23,3 +23,16 @@ set_target_properties(imagr_stb PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY
         "${CMAKE_BINARY_DIR}/plugins"
 )
+
+# install
+
+set_target_properties(imagr_stb PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+)
+
+install(TARGETS imagr_stb
+    RUNTIME DESTINATION plugins
+    LIBRARY DESTINATION plugins
+    # ARCHIVE DESTINATION plugins
+)

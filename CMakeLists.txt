@@ -66,22 +66,38 @@ add_custom_command(TARGET imagr POST_BUILD
     COMMENT "Copying resources to build directory"
 )
 
-# copy libraries
 
+# install rules
+
+install(TARGETS imagr RUNTIME DESTINATION .)
+
+# copy libraries
 # probs wont work properly on linux, sdl may need to built seperatly there.
 
 if(WIN32)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL3_ttf/x86_64-w64-mingw32/bin/SDL3_ttf.dll"
+        "${CMAKE_CURRENT_BINARY_DIR}/SDL3_ttf.dll"
+        COPYONLY
+    )
 
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL3_ttf/x86_64-w64-mingw32/bin/SDL3_ttf.dll"
-    "${CMAKE_CURRENT_BINARY_DIR}/SDL3_ttf.dll"
-    COPYONLY
-)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL3/x86_64-w64-mingw32/bin/SDL3.dll"
+        "${CMAKE_CURRENT_BINARY_DIR}/SDL3.dll"
+        COPYONLY
+    )
 
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL3/x86_64-w64-mingw32/bin/SDL3.dll"
-    "${CMAKE_CURRENT_BINARY_DIR}/SDL3.dll"
-    COPYONLY
-)
+    install(FILES $<TARGET_FILE:SDL3::SDL3> 
+        DESTINATION .
+    )
 
+    install(FILES $<TARGET_FILE:SDL3_ttf::SDL3_ttf> 
+        DESTINATION .
+    )
 endif()
+
+install(DIRECTORY resources/
+    DESTINATION resources
+    PATTERN "*.log" EXCLUDE
+    PATTERN ".DS_Store" EXCLUDE
+)
