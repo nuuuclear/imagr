@@ -1,6 +1,8 @@
 #include "Viewer.h"
 
-#define NOMINMAX
+#ifndef NOMINMAX
+    #define NOMINMAX // I dont even use windows.h, can't find std::min() without this though?
+#endif
 #include <algorithm>
 #include <iostream>
 
@@ -8,10 +10,11 @@
 #include "IImageDecoder.h"
 #include "PluginManager.h"
 
-Viewer::Viewer(app* app)
-    : parentApp(app),
-      texture(nullptr),
-      destRect{}
+Viewer::Viewer(app* app) : 
+    parentApp(app), 
+    texture(nullptr), 
+    destRect{},
+    pm(new PluginManager())
 {
 }
 
@@ -22,7 +25,7 @@ Viewer::~Viewer() {
     }
 }
 
-void Viewer::present(const std::string& imagePath, PluginManager* pm) {
+void Viewer::present(const std::string& imagePath) {
     SDL_Renderer* renderer = parentApp->getRenderer();
     if (!renderer) {
         std::cerr << "No renderer available.\n";
@@ -131,4 +134,8 @@ void Viewer::draw() {
     }
 
     SDL_RenderPresent(renderer);
+}
+
+void Viewer::loadPlugins(const std::string& dirPath) {
+    pm->loadPluginsFromFolder(dirPath);
 }

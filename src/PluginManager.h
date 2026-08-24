@@ -17,17 +17,18 @@ class PluginManager {
 public:
     ~PluginManager() { unloadPlugins(); }
 
-    // TODO: redo this, it ugly
     void loadPluginsFromFolder(const std::string& folderPath) {
         if (!fs::exists(folderPath)) return;
 
         for (const auto& entry : fs::directory_iterator(folderPath)) {
             if (isSharedLibrary(entry.path())) {
                 PluginHandle handle = LoadPluginLibrary(entry.path().wstring());
+
                 if (!handle) continue;
 
-                auto createFunc = (CreateDecoderFunc)getPluginSymbol(handle, "CreateDecoder");
-                auto destroyFunc = (DestroyDecoderFunc)getPluginSymbol(handle, "DestroyDecoder");
+                // TODO: add better symbol name handling
+                auto createFunc = (CreateDecoderFunc)getPluginSymbol(handle, "createDecoder");
+                auto destroyFunc = (DestroyDecoderFunc)getPluginSymbol(handle, "destroyDecoder");
 
                 if (createFunc && destroyFunc) {
                     IImageDecoder* decoder = createFunc();
@@ -43,6 +44,7 @@ public:
 
     IImageDecoder* findDecoderForFile(const std::string& filePath) {
         std::string ext = fs::path(filePath).extension().string();
+
         for (const auto& plugin : plugins) {
             if (plugin.decoder->supportsExtension(ext)) {
                 return plugin.decoder;

@@ -12,8 +12,10 @@ public:
     Viewer(app* app);
     ~Viewer();
 
-    void present(const std::string& imagePath, PluginManager* pm);
+    void present(const std::string& imagePath);
     void draw();
+
+    void loadPlugins(const std::string& dirPath);
 
     // TODO: image resizing with window
     // TODO: image zooming
@@ -21,6 +23,8 @@ public:
 private:
     app* parentApp = nullptr;
     SDL_Texture* texture = nullptr;
+
+    PluginManager* pm = nullptr;
 
     SDL_FRect destRect{};
 };

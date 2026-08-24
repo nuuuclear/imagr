@@ -7,22 +7,11 @@
 #include <string>
 #include <memory>
 
-const std::string pluginDir = "./plugins";
-
-std::unique_ptr<Viewer> viewer;
-
-void drawHook(float dt) {
-    viewer->draw();
-};
-
 int main(int argc, const char** argv) {
     appConfig conf;
     conf.title = "imagr";
 
-    PluginManager pm;
-    pm.loadPluginsFromFolder(pluginDir);
-
-    std::string imagePath = argv[1];
+    std::string imagePath = (argv[1] != nullptr) ? argv[1] : "";
 
     app app;
 
@@ -32,10 +21,18 @@ int main(int argc, const char** argv) {
         return 1;
     }
 
-    viewer = std::make_unique<Viewer>(&app);
-    viewer->present(imagePath, &pm);
+    auto viewer = std::make_unique<Viewer>(&app);
 
-    app.registerDrawHook(drawHook);
+    viewer->loadPlugins("./plugins");
+    viewer->present(imagePath);
+
+    app.on("fileDrop", [&viewer](const std::string& filePath) {
+        viewer->present(filePath);
+    });
+
+    app.addDrawCallback([&viewer]() { 
+        viewer->draw();
+    });
 
     app.run();
     

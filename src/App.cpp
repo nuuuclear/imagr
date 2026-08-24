@@ -1,5 +1,7 @@
 #include "App.h"
 
+#include <utility>
+
 app::app() {
 }
 
@@ -54,7 +56,6 @@ bool app::init(appConfig conf) {
 void app::run() {
     while (running) {
         step();
-        draw();
     }
 }
 
@@ -91,11 +92,12 @@ void app::step() {
                 break;
 
             case SDL_EVENT_DROP_FILE: {
-                const char* dropped_file = event.drop.data;
+                if (event.drop.data != NULL) {
+                    std::string dropped_file(event.drop.data);
 
-                // TODO: make this open photo
-
-                break;
+                    emit("fileDrop", std::as_const(dropped_file));
+                    break;
+                }
             }
 
             case SDL_EVENT_DROP_COMPLETE:
@@ -104,18 +106,9 @@ void app::step() {
             }
     }
 
-    for (auto& callback : updateCallbacks) {
-        callback(deltaTime);
+    for (const auto& entry: drawCallbacks) {
+        entry.callback(); 
     }
-
-    for (auto& callback : drawCallbacks) {
-        callback(deltaTime);
-    }
-}
-
-void app::draw() {
-    // draw photo, animate gifs
-
 }
 
 void app::reset(appConfig conf) {
