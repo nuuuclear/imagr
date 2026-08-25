@@ -17,5 +17,3 @@ cmake -B build -G Ninja
 cd build
 ninja
 ```
-
-on linux you might need to fix SDL3 in the CMakeLists.txt, as I couldn't get it working...

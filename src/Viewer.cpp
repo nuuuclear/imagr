@@ -18,6 +18,8 @@ Viewer::~Viewer() {
 }
 
 void Viewer::present(const std::string& imagePath) {
+    if (imagePath == "") return;
+
     SDL_Renderer* renderer = parentApp->getRenderer();
 
     if (!renderer) {

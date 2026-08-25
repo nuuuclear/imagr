@@ -75,6 +75,16 @@ bool app::init(appConfig conf) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Font failed to load: %s", SDL_GetError());
     }
 
+    auto iconPath = getFileSystem().resolve(
+        Paths::Resources,
+        "imagr.bmp"
+    );
+
+    SDL_Surface* iconSurf = SDL_LoadBMP(iconPath.string().c_str());
+    SDL_SetWindowIcon(window, iconSurf);
+
+    SDL_DestroySurface(iconSurf);
+
     renderer = SDL_CreateRenderer(window, NULL);
     SDL_SetRenderVSync(renderer, 1);
 

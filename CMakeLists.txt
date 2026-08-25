@@ -6,16 +6,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 
-set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3/cmake/")
-set(SDL3_ttf_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_ttf/cmake/")
-
 # externals
 
-find_package(SDL3 REQUIRED)
-find_package(SDL3_ttf REQUIRED)
+set(SDL_SHARED ON CACHE BOOL "" FORCE)
+set(SDL_STATIC OFF CACHE BOOL "" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_library(inicpp OBJECT external/inicpp/ini.cpp)
-target_include_directories(inicpp PUBLIC external/inicpp)
+add_subdirectory(external/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(external/SDL_ttf EXCLUDE_FROM_ALL)
+
+add_library(inicpp INTERFACE)
+target_include_directories(inicpp INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/inicpp/"
+)
 
 # Plugins
 
@@ -48,6 +52,14 @@ target_link_libraries(imagr PRIVATE
 )
 
 set_target_properties(imagr PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+if(WIN32)
+    set_target_properties(imagr PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+
+if(MSVC)
+    target_link_options(imagr PRIVATE "/ENTRY:mainCRTStartup")
+endif()
 
 if(UNIX AND NOT APPLE)
     # Linux/BSD: Link to pthread and lm
