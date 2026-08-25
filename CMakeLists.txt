@@ -13,6 +13,8 @@ set(SDL_STATIC OFF CACHE BOOL "" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
+
 add_subdirectory(external/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(external/SDL_ttf EXCLUDE_FROM_ALL)
 
@@ -89,17 +91,7 @@ install(TARGETS imagr RUNTIME DESTINATION .)
 # probs wont work properly on linux, sdl may need to built seperatly there.
 
 if(WIN32)
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL3_ttf/x86_64-w64-mingw32/bin/SDL3_ttf.dll"
-        "${CMAKE_CURRENT_BINARY_DIR}/SDL3_ttf.dll"
-        COPYONLY
-    )
 
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL3/x86_64-w64-mingw32/bin/SDL3.dll"
-        "${CMAKE_CURRENT_BINARY_DIR}/SDL3.dll"
-        COPYONLY
-    )
 
     install(FILES $<TARGET_FILE:SDL3::SDL3> 
         DESTINATION .
