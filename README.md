@@ -1,6 +1,7 @@
 # IMAGR
 
-An imager viewer that works using static libraries, at the moment I only have stb_image as a plugin.
+An image viewer that works using static libraries.
+Current plugins are: stb_image, qoi, and static (first frame only) gif support.
 
 This aims to be something akin to VST but for images.
 It could possibly be used in an image editor too, although I won't promise anything.
