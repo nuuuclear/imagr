@@ -36,6 +36,7 @@ public:
     void quit();
 
     void step();
+    void draw();
 
     void reset(appConfig conf);
 
@@ -84,8 +85,11 @@ private:
     SDL_Renderer* renderer = nullptr;
     SDL_Surface* applicationSurface = nullptr;
     TTF_TextEngine* text_engine = nullptr;
+    appConfig* config;
 
     FileSystem filesys;
+
+    TTF_Font* ui_font = nullptr;
 
     double targetFrameTime;
 
@@ -94,9 +98,7 @@ private:
 
     bool running = false;
 
-    TTF_Font* ui_font = nullptr;
-
-    appConfig* config;
+    static bool SDLCALL eventWatch(void* userdata, SDL_Event* event);
 
     // callbacks
     struct CallbackEntry {

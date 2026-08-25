@@ -8,6 +8,9 @@ app::app() {
 }
 
 app::~app() {
+    SDL_RemoveEventWatch(app::eventWatch, this);
+
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
     TTF_CloseFont(ui_font);
@@ -16,6 +19,12 @@ app::~app() {
 
 bool app::init(appConfig conf) {
     config = &conf;
+
+    SDL_SetHint(SDL_HINT_WINDOWS_ENABLE_MESSAGELOOP, "1");
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Video failed to init: %s", SDL_GetError());
+    }
     
     window = SDL_CreateWindow(
         config->title.c_str(), 
@@ -29,9 +38,7 @@ bool app::init(appConfig conf) {
         return false;
     }
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Video failed to init: %s", SDL_GetError());
-    }
+    SDL_AddEventWatch(app::eventWatch, this);
 
     bool ttf = TTF_Init();
     if (!ttf) {
@@ -118,28 +125,42 @@ void app::step() {
                 
                 break;
 
-            case SDL_EVENT_DROP_FILE: {
+            case SDL_EVENT_DROP_FILE: 
                 if (event.drop.data != NULL) {
                     std::string dropped_file(event.drop.data);
 
                     emit("fileDrop", std::as_const(dropped_file));
-                    break;
                 }
-            }
+                break;
 
             case SDL_EVENT_DROP_COMPLETE:
 
                 break;
-            }
+
+            case SDL_EVENT_WINDOW_RESIZED:
+
+                emit("windowResize");
+
+                break;
+        }
     }
+
+    draw();
+}
+
+void app::draw() {
+    SDL_SetRenderDrawColor(
+        renderer,
+        32, 32, 32, 255 // dark grey
+    );
+
+    SDL_RenderClear(renderer);
 
     for (const auto& entry: drawCallbacks) {
         entry.callback(); 
     }
-}
 
-FileSystem& app::getFileSystem() {
-    return filesys;
+    SDL_RenderPresent(renderer);
 }
 
 void app::reset(appConfig conf) {
@@ -148,6 +169,22 @@ void app::reset(appConfig conf) {
         conf.windowHeight * conf.windowScale
     );
 
+}
+
+bool SDLCALL app::eventWatch(void* userdata, SDL_Event* event) {
+    app* application = static_cast<app*>(userdata);
+
+    if (event->type == SDL_EVENT_WINDOW_EXPOSED) {
+        application->emit("windowResize");
+
+        application->draw();
+    }
+
+    return true;
+}
+
+FileSystem& app::getFileSystem() {
+    return filesys;
 }
 
 SDL_Window* app::getWindow() {

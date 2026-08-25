@@ -18,7 +18,7 @@ public:
 
     void loadPlugins(const std::string& dirPath);
 
-    // TODO: image resizing with window
+    void rebuildRect();
     // TODO: image zooming
     
 private:

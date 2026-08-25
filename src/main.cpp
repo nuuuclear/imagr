@@ -34,9 +34,14 @@ int main(int argc, const char** argv) {
         viewer->present(filePath);
     });
 
+    app.on("windowResize", [&viewer](void) {
+        viewer->rebuildRect();
+    });
+
     app.addDrawCallback([&viewer]() { 
         viewer->draw();
     });
+    
 
     app.run();
     

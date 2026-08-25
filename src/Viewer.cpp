@@ -37,15 +37,14 @@ void Viewer::present(const std::string& imagePath) {
         return;
     }
 
-    PluginImageData rawData =
-        plugin->api.decodeImage(
-            plugin->decoder,
-            imagePath.c_str()
-        );
+    PluginImageData rawData = plugin->api.decodeImage(
+        plugin->decoder,
+        imagePath.c_str()
+    );
 
-    if (   !rawData.pixels 
-        || rawData.width <= 0 
-        || rawData.height <= 0
+    if (!rawData.pixels 
+    ||  rawData.width  <= 0 
+    ||  rawData.height <= 0
     ) {
         std::cerr
             << "Image decoding failed: "
@@ -69,20 +68,11 @@ void Viewer::present(const std::string& imagePath) {
             << SDL_GetError()
             << "\n";
 
-        plugin->api.freeImageData(
-            plugin->decoder,
-            &rawData
-        );
-
+        plugin->api.freeImageData(plugin->decoder, &rawData);
         return;
     }
 
-    SDL_Texture* newTexture =
-        SDL_CreateTextureFromSurface(
-            renderer,
-            surface
-        );
-
+    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_DestroySurface(surface);
 
     if (!newTexture) {
@@ -91,25 +81,37 @@ void Viewer::present(const std::string& imagePath) {
             << SDL_GetError()
             << "\n";
 
-        plugin->api.freeImageData(
-            plugin->decoder,
-            &rawData
-        );
+        plugin->api.freeImageData(plugin->decoder, &rawData);
 
         return;
     }
 
-    plugin->api.freeImageData(
-        plugin->decoder,
-        &rawData
-    );
+    plugin->api.freeImageData(plugin->decoder, &rawData);
 
-    if (texture) {
-        SDL_DestroyTexture(texture);
-    }
-
+    if (texture) SDL_DestroyTexture(texture);
     texture = newTexture;
 
+    rebuildRect();
+}
+
+void Viewer::draw() {
+    SDL_Renderer* renderer = parentApp->getRenderer();
+
+    if (texture) {
+        SDL_RenderTexture(
+            renderer,
+            texture,
+            nullptr,
+            &destRect
+        );
+    }
+}
+
+void Viewer::loadPlugins(const std::string& dirPath) {
+    pm.loadPluginsFromFolder(dirPath);
+}
+
+void Viewer::rebuildRect() {
     float imgWidth = 0.0f;
     float imgHeight = 0.0f;
     SDL_GetTextureSize(
@@ -130,38 +132,9 @@ void Viewer::present(const std::string& imagePath) {
     float scaleY = static_cast<float>(windowHeight) /imgHeight;
     float scale = std::min(scaleX, scaleY);
 
-    destRect.w = imgWidth * scale;
+    destRect.w = imgWidth  * scale;
     destRect.h = imgHeight * scale;
 
-    destRect.x = (static_cast<float>(windowWidth) - destRect.w) / 2.0f;
+    destRect.x = (static_cast<float>(windowWidth)  - destRect.w) / 2.0f;
     destRect.y = (static_cast<float>(windowHeight) - destRect.h) / 2.0f;
-}
-
-void Viewer::draw() {
-    SDL_Renderer* renderer = parentApp->getRenderer();
-
-    SDL_SetRenderDrawColor(
-        renderer,
-        32, // dark grey
-        32,
-        32,
-        255
-    );
-
-    SDL_RenderClear(renderer);
-
-    if (texture) {
-        SDL_RenderTexture(
-            renderer,
-            texture,
-            nullptr,
-            &destRect
-        );
-    }
-
-    SDL_RenderPresent(renderer);
-}
-
-void Viewer::loadPlugins(const std::string& dirPath) {
-    pm.loadPluginsFromFolder(dirPath);
 }

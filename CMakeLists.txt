@@ -4,6 +4,8 @@ project(imagr)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+
 set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3/cmake/")
 set(SDL3_ttf_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_ttf/cmake/")
 
