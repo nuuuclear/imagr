@@ -25,9 +25,9 @@ struct appConfig {
 
 class app {
 public:
-    using EventCallback = std::function<void(const SDL_Event&)>;
-    using GenericCallback = std::function<void()>;
-    using ID = uint64_t;
+    using EventCallback  = std::function<void(const SDL_Event&)>;
+    using DrawCallback   = std::function<void()>;
+    using UpdateCallback = std::function<void(double)>;
 
     app();
     ~app();
@@ -47,20 +47,8 @@ public:
     SDL_Renderer* getRenderer();
 
     void addEventCallback(EventCallback callback);
-
-    ID addDrawCallback(GenericCallback callback) {
-        ID currentId = nextId++;
-        drawCallbacks.push_back({currentId, callback});
-        return currentId;
-    }
-
-    void removeDrawCallback(ID id) {
-        drawCallbacks.erase(
-            std::remove_if(drawCallbacks.begin(), drawCallbacks.end(),
-                [id](const CallbackEntry& entry) { return entry.id == id; }),
-            drawCallbacks.end()
-        );
-    }
+    void addUpdateCallback(UpdateCallback callback);
+    void addDrawCallback(DrawCallback callback);
 
     template<typename Callable>
     void on(const std::string& eventName, Callable&& callback) {
@@ -104,14 +92,9 @@ private:
     static bool SDLCALL eventWatch(void* userdata, SDL_Event* event);
 
     // callbacks
-    struct CallbackEntry {
-        ID id;
-        GenericCallback callback;
-    };
-
-    ID nextId = 0;
     std::vector<EventCallback> eventCallbacks;
-    std::vector<CallbackEntry> drawCallbacks;
+    std::vector<UpdateCallback> updateCallbacks;
+    std::vector<DrawCallback> drawCallbacks;
 
     std::unordered_map<std::string, std::vector<std::any>> listeners;
 };

@@ -109,6 +109,18 @@ void app::quit() {
     SDL_Quit();
 }
 
+void app::addEventCallback(EventCallback callback) {
+    eventCallbacks.push_back(std::move(callback));
+}
+
+void app::addUpdateCallback(UpdateCallback callback) {
+    updateCallbacks.push_back(std::move(callback));
+}
+
+void app::addDrawCallback(DrawCallback callback) {
+    drawCallbacks.push_back(std::move(callback));
+}
+
 void app::step() {
     uint64_t currentCounter = SDL_GetPerformanceCounter();
 
@@ -154,9 +166,15 @@ void app::step() {
                 break;
         }
 
+        // signal all event callbacks
         for (const auto& callback : eventCallbacks) {
             callback(event);
         }
+    }
+
+    // signal all update callbacks
+    for (const auto& callback : updateCallbacks) {
+        callback(deltaTime);
     }
    
     draw();
@@ -170,8 +188,9 @@ void app::draw() {
 
     SDL_RenderClear(renderer);
 
-    for (const auto& entry: drawCallbacks) {
-        entry.callback(); 
+    // signal all draw callbacks
+    for (const auto& callback: drawCallbacks) {
+        callback(); 
     }
 
     SDL_RenderPresent(renderer);
@@ -184,11 +203,6 @@ void app::reset(appConfig conf) {
     );
 
 }
-
-void app::addEventCallback(EventCallback callback) {
-    eventCallbacks.push_back(std::move(callback));
-}
-
 
 bool SDLCALL app::eventWatch(void* userdata, SDL_Event* event) {
     app* application = static_cast<app*>(userdata);

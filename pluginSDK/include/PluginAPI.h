@@ -9,6 +9,11 @@
 
 using PluginDecoder = void*;
 
+enum PluginCapabilities : uint32_t {
+    PLUGIN_CAPABILITY_STATIC    = 1 << 0,
+    PLUGIN_CAPABILITY_ANIMATION = 1 << 1
+};
+
 struct PluginImageData {
     uint8_t* pixels = nullptr;
 
@@ -16,6 +21,34 @@ struct PluginImageData {
     int height = 0;
     int channels = 0;
 };
+
+struct PluginImageFrame {
+    uint8_t* pixels;
+
+    int width;
+    int height;
+    int channels;
+
+    uint32_t durationMs;
+};
+
+struct PluginImageSequence {
+    PluginImageFrame* frames;
+    int frameCount;
+
+    bool animated;
+};
+
+using PluginCreateFunc = PluginDecoder (*)();
+using PluginDestroyFunc = void (*)(PluginDecoder);
+
+using PluginSupportsExtensionFunc = bool (*)(PluginDecoder, const char*);
+
+using PluginDecodeImageFunc = PluginImageData (*)(PluginDecoder, const char*);
+using PluginFreeImageDataFunc = void (*)(PluginDecoder, PluginImageData*);
+
+using PluginDecodeAnimationFunc = PluginImageSequence (*)(PluginDecoder, const char*);
+using PluginFreeAnimationFunc = void (*)(PluginDecoder, PluginImageSequence*);
 
 struct PluginAPI {
     uint32_t apiVersion;
@@ -25,28 +58,20 @@ struct PluginAPI {
     const char* displayName;
     const char* developerName;
 
-    // high priority plugins get used when multiple plugins support the same file extensions
+    uint32_t capabilities;
+
     int priority;
 
-    PluginDecoder (*create)();
-    void (*destroy)(PluginDecoder decoder);
+    PluginCreateFunc create;
+    PluginDestroyFunc destroy;
 
-    // returns true if this decoder supports the suplied extension
-    // example: ".png", ".jpg", or ".webp"
-    bool (*supportsExtension)(
-        PluginDecoder decoder,
-        const char* extension
-    );
+    PluginSupportsExtensionFunc supportsExtension;
 
-    PluginImageData (*decodeImage)(
-        PluginDecoder decoder,
-        const char* filePath
-    );
+    PluginDecodeImageFunc decodeImage;
+    PluginFreeImageDataFunc freeImageData;
 
-    void (*freeImageData)(
-        PluginDecoder decoder,
-        PluginImageData* imageData
-    );
+    PluginDecodeAnimationFunc decodeAnimation;
+    PluginFreeAnimationFunc freeAnimation;
 };
 
 using GetPluginAPIFunc = PluginAPI (*)();

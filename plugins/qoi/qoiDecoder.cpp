@@ -1,4 +1,5 @@
 #include "PluginAPI.h"
+#include "PluginStaticImage.h"
 
 #define QOI_IMPLEMENTATION
 #include "qoi.h"
@@ -96,11 +97,16 @@ PLUGIN_EXPORT PluginAPI GetPluginAPI() {
         "QOI image support",
         "Internal",
         50,
+        
+        PLUGIN_CAPABILITY_STATIC,
 
         Create,
         Destroy,
         SupportsExtension,
         DecodeImage,
-        FreeImageData
+        FreeImageData,
+
+        PluginDecodeAnimationUnsupported,
+        PluginFreeAnimationUnsupported
     };
 }

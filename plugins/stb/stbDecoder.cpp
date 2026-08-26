@@ -1,4 +1,5 @@
 #include "PluginAPI.h"
+#include "PluginStaticImage.h"
 
 #include <algorithm>
 #include <cctype>
@@ -95,10 +96,15 @@ PLUGIN_EXPORT PluginAPI GetPluginAPI() {
         "Internal",
         50,
 
+        PLUGIN_CAPABILITY_STATIC,
+
         Create,
         Destroy,
         SupportsExtension,
         DecodeImage,
-        FreeImageData
+        FreeImageData,
+
+        PluginDecodeAnimationUnsupported,
+        PluginFreeAnimationUnsupported
     };
 }
