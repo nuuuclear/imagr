@@ -153,8 +153,12 @@ void app::step() {
 
                 break;
         }
-    }
 
+        for (const auto& callback : eventCallbacks) {
+            callback(event);
+        }
+    }
+   
     draw();
 }
 
@@ -180,6 +184,11 @@ void app::reset(appConfig conf) {
     );
 
 }
+
+void app::addEventCallback(EventCallback callback) {
+    eventCallbacks.push_back(std::move(callback));
+}
+
 
 bool SDLCALL app::eventWatch(void* userdata, SDL_Event* event) {
     app* application = static_cast<app*>(userdata);

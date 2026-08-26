@@ -25,7 +25,8 @@ struct appConfig {
 
 class app {
 public:
-    using eventCallback = std::function<void()>;
+    using EventCallback = std::function<void(const SDL_Event&)>;
+    using GenericCallback = std::function<void()>;
     using ID = uint64_t;
 
     app();
@@ -45,7 +46,9 @@ public:
     SDL_Window* getWindow();
     SDL_Renderer* getRenderer();
 
-    ID addDrawCallback(eventCallback callback) {
+    void addEventCallback(EventCallback callback);
+
+    ID addDrawCallback(GenericCallback callback) {
         ID currentId = nextId++;
         drawCallbacks.push_back({currentId, callback});
         return currentId;
@@ -103,10 +106,11 @@ private:
     // callbacks
     struct CallbackEntry {
         ID id;
-        eventCallback callback;
+        GenericCallback callback;
     };
 
     ID nextId = 0;
+    std::vector<EventCallback> eventCallbacks;
     std::vector<CallbackEntry> drawCallbacks;
 
     std::unordered_map<std::string, std::vector<std::any>> listeners;

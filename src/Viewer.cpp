@@ -93,6 +93,8 @@ void Viewer::present(const std::string& imagePath) {
     if (texture) SDL_DestroyTexture(texture);
     texture = newTexture;
 
+    zoom = 1.0f;
+
     rebuildRect();
 }
 
@@ -114,6 +116,8 @@ void Viewer::loadPlugins(const std::string& dirPath) {
 }
 
 void Viewer::rebuildRect() {
+    if (!texture) return;
+
     float imgWidth = 0.0f;
     float imgHeight = 0.0f;
     SDL_GetTextureSize(
@@ -131,12 +135,108 @@ void Viewer::rebuildRect() {
     );
 
     float scaleX = static_cast<float>(windowWidth) / imgWidth;
-    float scaleY = static_cast<float>(windowHeight) /imgHeight;
-    float scale = std::min(scaleX, scaleY);
+    float scaleY = static_cast<float>(windowHeight) / imgHeight;
 
-    destRect.w = imgWidth  * scale;
+    fitScale = std::min(scaleX, scaleY);
+
+    float scale = fitScale * zoom;
+
+    destRect.w = imgWidth * scale;
     destRect.h = imgHeight * scale;
 
-    destRect.x = (static_cast<float>(windowWidth)  - destRect.w) / 2.0f;
-    destRect.y = (static_cast<float>(windowHeight) - destRect.h) / 2.0f;
+    if (zoom == 1.0f) {
+        imageX = (static_cast<float>(windowWidth) - destRect.w) * 0.5f;
+        imageY = (static_cast<float>(windowHeight) - destRect.h) * 0.5f;
+    }
+
+    destRect.x = imageX;
+    destRect.y = imageY;
+}
+
+void Viewer::handleEvent(const SDL_Event& event) {
+    if (event.type == SDL_EVENT_MOUSE_MOTION) {
+        mouseX = event.motion.x;
+        mouseY = event.motion.y;
+
+        if (dragging) {
+            float dx = mouseX - dragStartMouseX;
+            float dy = mouseY - dragStartMouseY;
+
+            imageX = dragStartImageX + dx;
+            imageY = dragStartImageY + dy;
+
+            destRect.x = imageX;
+            destRect.y = imageY;
+        }
+    }
+
+    if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+        if (event.button.button == SDL_BUTTON_MIDDLE) {
+
+            dragging = true;
+
+            dragStartMouseX = event.button.x;
+            dragStartMouseY = event.button.y;
+
+            dragStartImageX = imageX;
+
+            dragStartImageY = imageY;
+        }
+    }
+
+    if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+
+        if (event.button.button ==
+            SDL_BUTTON_MIDDLE) {
+
+            dragging = false;
+        }
+    }
+
+    if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+        if (!texture) return;
+
+        float oldZoom = zoom;
+
+        if (event.wheel.y > 0) {
+            zoom *= 1.1f;
+        } else if (event.wheel.y < 0) {
+            zoom /= 1.1f;
+        }
+
+        zoom = std::clamp(
+            zoom,
+            0.05f,
+            20.0f
+        );
+
+        if (zoom == oldZoom) return;
+
+        float oldWidth = destRect.w;
+        float oldHeight = destRect.h;
+
+        float oldX = destRect.x;
+        float oldY = destRect.y;
+
+        float relativeX = (mouseX - oldX) / oldWidth;
+        float relativeY = (mouseY - oldY) / oldHeight;
+
+        rebuildRect();
+
+        imageX = mouseX - relativeX * destRect.w;
+        imageY = mouseY - relativeY * destRect.h;
+
+        destRect.x = imageX;
+        destRect.y = imageY;
+    }
+}
+
+void Viewer::attachEvents() {
+    parentApp->addEventCallback([this](const SDL_Event& event) {
+        handleEvent(event);
+    });
+
+    parentApp->addDrawCallback([this]() {
+        draw();
+    });
 }

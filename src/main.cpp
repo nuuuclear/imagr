@@ -29,6 +29,8 @@ int main(int argc, const char** argv) {
     auto pluginsPath = app.getFileSystem().resolve(Paths::Plugins);
     viewer->loadPlugins(pluginsPath.string());
     
+    viewer->attachEvents();
+
     viewer->present(imagePath);
 
     app.on("fileDrop", [&viewer](const std::string& filePath) {
@@ -38,11 +40,6 @@ int main(int argc, const char** argv) {
     app.on("windowResize", [&viewer](void) {
         viewer->rebuildRect();
     });
-
-    app.addDrawCallback([&viewer]() { 
-        viewer->draw();
-    });
-    
 
     app.run();
     
